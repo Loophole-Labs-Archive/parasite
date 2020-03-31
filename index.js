@@ -69,7 +69,7 @@ class Parasite extends EventEmitter {
             this.ui = express();
             this.ui.use(bodyParser.urlencoded({ extended: false }));
             this.ui.use(bodyParser.json());
-            this.ui.get('/data', function(req, res) {
+            this.ui.get('/all', function(req, res) {
                 res.status(200).json({
                     requests: self.requests,
                     responses: self.responses
@@ -90,13 +90,13 @@ class Parasite extends EventEmitter {
 
             this.ui.get('/request/:requestIndex', function(req, res) {
                 res.status(self.requests[req.params.requestIndex] ? 200 : 404).json({
-                    request: self.requests[req.params.requestIndex],
+                    request: self.parseRequest(Buffer.from(self.requests[req.params.requestIndex], 'base64').toString())
                 });
             });
 
             this.ui.get('/response/:responseIndex', function(req, res) {
                 res.status(self.responses[req.params.responseIndex] ? 200 : 404).json({
-                    request: self.responses[req.params.responseIndex],
+                    request: self.parseRequest(Buffer.from(self.responses[req.params.responseIndex], 'base64').toString())
                 });
             });
 
@@ -343,10 +343,10 @@ class Parasite extends EventEmitter {
             siganle.error('%s', error ? error.stack : 'Error replaying request');
         });
 
-        if (request.data) {
-            req.end(request.data);
+        if (request.body) {
+            req.end(request.body);
             if (this.logLevel > 1) {
-                signale.log('\r\n%s\r\n', request.data);
+                signale.log('\r\n%s\r\n', request.body);
             }
         } else {
             req.end();
@@ -381,7 +381,7 @@ class Parasite extends EventEmitter {
                     url: url,
                     httpVersion: version,
                     headers: headers,
-                    data: body
+                    body: body
                 };
             } else {
                 signale.error('Cannot parse request, problem with header');
