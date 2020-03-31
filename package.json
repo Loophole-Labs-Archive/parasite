@@ -8,6 +8,8 @@
   "license": "MPL-2.0",
   "private": false,
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
     "fast-stream-to-buffer": "^1.0.0",
     "memorystream": "^0.3.1",
     "signale": "^1.4.0"

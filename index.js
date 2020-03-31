@@ -11,6 +11,10 @@ const url = require('url');
 const stream = require('stream');
 const streamToBuffer = require('fast-stream-to-buffer')
 const MemoryStream = require('memorystream');
+const express = require('express');
+const bodyParser = require("body-parser");
+const EventEmitter = require('events');
+
 const { Signale } = require('signale');
  
 const options = {
@@ -26,17 +30,24 @@ const options = {
 
 const signale = new Signale(options);
 
- class Capture {
-    constructor(proxyURI = 'http://localhost:3000/', port = 8080, host = 'localhost', request = true, response = false, allowInsecure = false, logLevel = 1, tcp = false) {
-        
-        this.proxyURI = url.parse(proxyURI);
-        this.port = port;
-        this.host = host;
-        this.request = request;
-        this.response = response;
-        this.allowInsecure = allowInsecure;
-        this.logLevel = logLevel;
-        this.tcp = tcp;
+class Parasite extends EventEmitter {
+
+    constructor(options) {
+        super(options);
+
+        this.options = options || {};
+
+        this.proxyURI = url.parse(this.options.proxyURI || 'http://localhost:3000/');
+        this.port = this.options.port || 8080;
+        this.host = this.options.host || 'localhost';
+        this.request = this.options.request || true;
+        this.response = this.options.response || false;
+        this.allowInsecure = this.options.allowInsecure || false;
+        this.logLevel = this.options.logLevel || 1;
+        this.uiEnabled = this.options.ui || true;
+        this.uiPort = this.options.uiPort || 5050;
+        this.uiHost = this.options.uiHost || 'localhost'
+        this.tcp = this.options.tcp || false;
 
         if(!this.tcp) {
             this.server = this.proxyURI.protocol === 'https:' ? https : http;
@@ -45,8 +56,90 @@ const signale = new Signale(options);
         this.proxy = http.createServer(this.requestHandler.bind(this));
 
         this.proxy.listen(this.port, this.host);
-        this.requests = {};
-        this.responses = {};
+        this.requests = [];
+        this.responses = [];
+        this.replayResponse = null;
+
+        if(this.logLevel >= 0 || !this.logLevel) {
+            signale.parasite("Will proxy traffic from http://" + this.host + ":" + this.port + " to " + this.proxyURI.href);
+        }
+
+        if(this.uiEnabled) {
+            var self = this;
+            this.ui = express();
+            this.ui.use(bodyParser.urlencoded({ extended: false }));
+            this.ui.use(bodyParser.json());
+            this.ui.get('/data', function(req, res) {
+                res.status(200).json({
+                    requests: self.requests,
+                    responses: self.responses
+                });
+            });
+
+            this.ui.get('/requests', function(req, res) {
+                res.status(200).json({
+                    requests: self.requests,
+                });
+            });
+
+            this.ui.get('/responses', function(req, res) {
+                res.status(200).json({
+                    responses: self.responses,
+                });
+            });
+
+            this.ui.get('/request/:requestIndex', function(req, res) {
+                res.status(self.requests[req.params.requestIndex] ? 200 : 404).json({
+                    request: self.requests[req.params.requestIndex],
+                });
+            });
+
+            this.ui.get('/response/:responseIndex', function(req, res) {
+                res.status(self.responses[req.params.responseIndex] ? 200 : 404).json({
+                    request: self.responses[req.params.responseIndex],
+                });
+            });
+
+            this.ui.post('/replay', async function(req, res) {
+                const requestIndex = req.body.requestIndex;
+                if(self.logLevel > 0) {
+                    signale.parasite("Replaying request #" + requestIndex);
+                }
+
+                const replay = await new Promise((resolve, reject) => {
+                    try {
+                        self.on("replay", async function(httpVersion, statusCode, statusMessage, headers, response) {
+                            if(!response) {
+                                signale.error("Requested Index not found");
+                                return resolve({
+                                    response: null
+                                });
+                            } else {
+                                return resolve({
+                                    response: {
+                                        httpVersion: httpVersion,
+                                        statusCode: statusCode,
+                                        statusMessage: statusMessage,
+                                        headers: headers,
+                                        body: response.toString()
+                                    }
+                                });
+                            }
+                        });
+                        self.requestReplay(requestIndex); 
+                    } catch (err) {
+                        return reject(err);
+                    }
+                });
+
+                return res.status(replay.response ? 200 : 404).json(replay);
+            });
+            this.ui.listen(this.uiPort, this.uiHost, function() {
+                if(self.logLevel >= 0) {
+                    signale.parasite("Web UI started on http://" + self.uiHost + ":" + self.uiPort);
+                }
+            });
+        }
     }
 
     combinePaths () {
@@ -169,9 +262,7 @@ const signale = new Signale(options);
             fresStream = new MemoryStream();
             streamToBuffer(fresStream, function (err, buf) {
                 if (err) throw err
-                self.responses[req] = {
-                    response: buf.toString('base64')
-                }
+                self.responses.unshift(buf.toString('base64'));
             });
             resStream.pipe(fresStream);
         }
@@ -179,9 +270,7 @@ const signale = new Signale(options);
             freqStream = new MemoryStream();
             streamToBuffer(freqStream, function (err, buf) {
                 if (err) throw err
-                self.requests[req] = {
-                    request: buf.toString('base64')
-                }
+                self.requests.unshift(buf.toString('base64'));
             });
             reqStream.pipe(freqStream);
         }
@@ -200,24 +289,81 @@ const signale = new Signale(options);
 
         this.routeRequest(req, res, reqStream, resStream);
     }
- }
+    
+    requestReplay (requestIndex) {
+        var self = this;
+        if(this.requests.length < 1) {
+            this.emit("replay", null);
+            return;
+        }
+        const request = this.parseRequest(Buffer.from(this.requests[requestIndex], 'base64').toString());
+        const url = require('url').parse(request.url);
+        const server = url.protocol === 'https:' ? https : http;
+        const options = {
+            hostname: url.hostname,
+            port: url.port,
+            method: request.method,
+            path: url.path,
+            headers: request.headers,
+            httpVersion: request.httpVersion,
+            rejectUnauthorized: this.options.allowInsecure
+        }
 
-class Replay {
-    constructor() {
+        if (this.logLevel > 1) {
+            siganle.log('%s %s HTTP/%s',
+                request.method,
+                request.url,
+                options.httpVersion);
 
+            this.writeDictionaryToStream(process.stdout, request.headers);
+        }
+
+        const req = server.request(options, function (response) {
+            if (self.logLevel > 1) {
+                signale.log('HTTP/%s %s%s', response.httpVersion, response.statusCode, response.statusMessage ? ' ' + response.statusMessage : '');
+                writeDictionaryToStream(process.stdout, response.headers);
+                signale.log('');
+            }
+
+            if(self.logLevel > 1) {
+                response.pipe(process.stdout);
+            }
+
+            const replayResponseStream = new MemoryStream();
+            streamToBuffer(replayResponseStream, function (err, buf) {
+                if (err) throw err
+
+                self.emit("replay", response.httpVersion, response.statusCode, response.statusMessage, response.headers, buf.toString());
+            });
+            response.pipe(replayResponseStream);
+
+        });
+
+        req.on('error', function (error) {
+            siganle.error('%s', error ? error.stack : 'Error replaying request');
+        });
+
+        if (request.data) {
+            req.end(request.data);
+            if (this.logLevel > 1) {
+                signale.log('\r\n%s\r\n', request.data);
+            }
+        } else {
+            req.end();
+        }
     }
 
-    parseRequest (payload) {
+    parseRequest (request) {
         const headDelimiterExp = /\r?\n\r?\n/;
         const headerExp = /^([^\s]+)\s([^\s]+)\sHTTP\/([\d.]+)\r?\n/i;
 
-        let head, body, headers, summary, headerMatch;
+        let head, body, headers, headerMatch;
         let method, url, version;
-        let delimMatch = headDelimiterExp.exec(payload);
+        let delimMatch = headDelimiterExp.exec(request);
 
         if (delimMatch) {
-            head = payload.substring(0, delimMatch.index);
-            body = payload.substring(delimMatch.index + delimMatch[0].length);
+            head = request.substring(0, delimMatch.index);
+            body = request.substring(delimMatch.index + delimMatch[0].length);
             headerMatch = headerExp.exec(head);
 
             if (headerMatch) {
@@ -238,87 +384,10 @@ class Replay {
                     data: body
                 };
             } else {
-                signale.error('Cannot parse payload, problem with header');
+                signale.error('Cannot parse request, problem with header');
             }
         } else {
-            signale.error("Cannot parse payload");
-        }
-    }
-
-    writeDictionaryToStream(stream, dict) {
-        for (var i in dict) {
-            stream.write(util.format('%s: %s\r\n', i, dict[i]));
-        }
-    }
-
-    replay(payload, opts, callback) {
-        var rq = parseRequest(payload);
-        var url = require('url').parse(rq.url);
-        var client = url.protocol === 'https:' ? https : http;
-        opts = opts || {};
-        var options = {
-            hostname: url.hostname,
-            port: url.port,
-            method: rq.method,
-            path: url.path,
-            headers: rq.headers,
-            httpVersion: rq.httpVersion,
-            rejectUnauthorized: !opts.insecure
-        };
-
-        if (opts.verbose && opts.outputHeaders) {
-            console.log('%s %s HTTP/%s',
-                rq.method,
-                rq.url,
-                options.httpVersion);
-
-            this.writeDictionaryToStream(process.stdout, rq.headers);
-        }
-
-        var req = client.request(options, function (response) {
-            if (opts.outputHeaders) {
-                console.log('HTTP/%s %s%s', response.httpVersion, response.statusCode, response.statusMessage ? ' ' + response.statusMessage : '');
-                writeDictionaryToStream(process.stdout, response.headers);
-                console.log('');
-            }
-
-            response.pipe(process.stdout);
-
-            if (callback) {
-                callback(response);
-            }
-        });
-
-        req.on('error', function (error) {
-            console.log('Error: %s', error ? error.stack : 'Error executing request');
-        });
-
-        if (rq.data) {
-            req.end(rq.data);
-            if (opts.verbose) {
-                console.log('\r\n%s\r\n', rq.data);
-            }
-        } else {
-            req.end();
-        }
-    }
-}
-
-class Parasite {
-    constructor(options) {
-        this.options = options || {};
-        this.capture = new Capture(
-            this.options.proxyURI, 
-            this.options.port,
-            this.options.host, 
-            this.options.request, 
-            this.options.response, 
-            this.options.allowInsecure, 
-            this.options.logLevel, 
-            this.options.tcp
-        );
-        if(this.options.logLevel >= 0 || !this.options.logLevel) {
-            signale.parasite("Will proxy traffic from http://" + this.capture.host + ":" + this.capture.port + " to " + this.capture.proxyURI.href);
+            signale.error("Cannot parse request");
         }
     }
 }
