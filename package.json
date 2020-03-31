@@ -1,9 +1,9 @@
 {
   "name": "parasite",
   "version": "0.1.0",
-  "description": "Parasite is an MITM proxy that captures requests and responses between a server and client and allows you to replay them at will",
+  "description": "Parasite is a native proxy server which allows you to intercept, record, and replay incomming HTTP and raw TCP traffic. It provides an optional web interface and API for managing the incoming requests and replaying them on demand. It is also provided as an optional NPM package.",
   "main": "index.js",
-  "repository": "https://github.com/loophole-labs/parasite",
+  "repository": "https://github.com/Loophole-Labs/parasite",
   "author": "Shivansh Vij <shivanshvij@loopholelabs.io>",
   "license": "MPL-2.0",
   "private": false,
@@ -12,6 +12,7 @@
     "express": "^4.17.1",
     "fast-stream-to-buffer": "^1.0.0",
     "memorystream": "^0.3.1",
+    "pkg": "^4.4.5",
     "signale": "^1.4.0"
   }
 }
