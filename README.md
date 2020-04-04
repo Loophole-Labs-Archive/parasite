@@ -1,8 +1,6 @@
 # Parasite
 
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-
-[![NPM](https://badgen.net/npm/v/@loophole-labs/parasite)](https://npmjs.com/package/@loophole-labs/parasite) [![NPM](https://badgen.net/npm/dm/@loophole-labs/parasite)](https://npmjs.com/package/@loophole-labs/parasite)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) [![NPM](https://badgen.net/npm/v/@loophole-labs/parasite)](https://npmjs.com/package/@loophole-labs/parasite) [![NPM](https://badgen.net/npm/dm/@loophole-labs/parasite)](https://npmjs.com/package/@loophole-labs/parasite)
 **Parasite** is a standalone proxy server which allows you to intercept, record, and replay incoming HTTP and raw TCP traffic. It provides an optional web interface and API for managing the incoming requests and replaying them on demand. It is also provided as an optional NPM package.
 
 ---
