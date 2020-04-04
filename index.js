@@ -5,7 +5,6 @@
 const util = require('util');
 const http = require('http');
 const https = require('https');
-const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const stream = require('stream');
@@ -14,9 +13,9 @@ const MemoryStream = require('memorystream');
 const express = require('express');
 const bodyParser = require("body-parser");
 const EventEmitter = require('events');
-
 const { Signale } = require('signale');
- 
+const Router = require('express').Router;
+
 const options = {
   types: {
     parasite: {
@@ -200,7 +199,7 @@ class Parasite extends EventEmitter {
             fresStream = new MemoryStream();
             streamToBuffer(fresStream, function (err, buf) {
                 if (err) throw err
-                self.responses.unshift(buf.toString('base64'));
+                self.responses.unshift(self.parseResponse(buf.toString()));
             });
             resStream.pipe(fresStream);
         }
@@ -208,7 +207,7 @@ class Parasite extends EventEmitter {
             freqStream = new MemoryStream();
             streamToBuffer(freqStream, function (err, buf) {
                 if (err) throw err
-                self.requests.unshift(buf.toString('base64'));
+                self.requests.unshift(self.parseRequest(buf.toString()));
             });
             reqStream.pipe(freqStream);
         }
@@ -303,7 +302,7 @@ class Parasite extends EventEmitter {
             head = request.substring(0, delimMatch.index);
             body = request.substring(delimMatch.index + delimMatch[0].length);
             headerMatch = headerExp.exec(head);
-
+            
             if (headerMatch) {
                 method = headerMatch[1];
                 url = headerMatch[2];
@@ -326,6 +325,42 @@ class Parasite extends EventEmitter {
             }
         } else {
             this.logger.error("Cannot parse request");
+        }
+    }
+
+    parseResponse (response) {
+        const headDelimiterExp = /\r?\n\r?\n/;
+        const headerExp = /^HTTP\/([\d.]+)\s([\d.]+)/i;
+
+        let head, body, headers, headerMatch;
+        let status, version
+        let delimMatch = headDelimiterExp.exec(response);
+
+        if (delimMatch) {
+            head = response.substring(0, delimMatch.index);
+            body = response.substring(delimMatch.index + delimMatch[0].length);
+            headerMatch = headerExp.exec(head);
+
+            if (headerMatch) {
+                version = headerMatch[1];
+                status = headerMatch[2];
+                headers = head.substring(headerMatch.index + headerMatch[0].length)
+                    .split(/\r?\n/)
+                    .map(function (h) { return /^([^\s:]+)\s?:\s?(.*)$/.exec(h); })
+                    .filter(function (m) { return m; })
+                    .reduce(function (obj, a) { obj[a[1]] = a[2]; return obj; }, {});
+
+                return {
+                    status: status,
+                    httpVersion: version,
+                    headers: headers,
+                    body: body
+                };
+            } else {
+                this.logger.error('Cannot parse response, problem with header');
+            }
+        } else {
+            this.logger.error("Cannot parse response");
         }
     }
 
@@ -364,40 +399,55 @@ class Parasite extends EventEmitter {
 
         var self = this;
         this.ui = express();
-        this.ui.use(bodyParser.urlencoded({ extended: false }));
-        this.ui.use(bodyParser.json());
-        this.ui.get('/all', function(req, res) {
+        this.uiRouter = Router();
+
+        this.uiRouter.use(function(req, res, next) {
+            Object.setPrototypeOf(req, self.ui.request);
+            Object.setPrototypeOf(res, self.ui.response);
+            req.res = res;
+            res.req = req;
+            next();
+        });
+
+        this.uiRouter.get('/info', function(req, res) {
             res.status(200).json({
-                requests: self.requests,
-                responses: self.responses
+                ingress: 'http://' + self.host + ':' + self.port,
+                proxy: self.proxyURI.href
             });
         });
 
-        this.ui.get('/requests', function(req, res) {
+        this.uiRouter.get('/all', function(req, res) {
             res.status(200).json({
-                requests: self.requests,
+                requests: self.requests.length >= 10 ? self.requests.slice(0, 10) : self.requests,
+                responses: self.responses.length >= 10 ? self.responses.slice(0, 10) : self.responses
             });
         });
 
-        this.ui.get('/responses', function(req, res) {
+        this.uiRouter.get('/requests', function(req, res) {
             res.status(200).json({
-                responses: self.responses,
+                requests: self.requests.length >= 10 ? self.requests.slice(0, 10) : self.requests
             });
         });
 
-        this.ui.get('/request/:requestIndex', function(req, res) {
+        this.uiRouter.get('/responses', function(req, res) {
+            res.status(200).json({
+                responses: self.responses.length >= 10 ? self.responses.slice(0, 10) : self.responses
+            });
+        });
+
+        this.uiRouter.get('/request/:requestIndex', function(req, res) {
             res.status(self.requests[req.params.requestIndex] ? 200 : 404).json({
-                request: self.parseRequest(Buffer.from(self.requests[req.params.requestIndex], 'base64').toString())
+                request: self.requests[req.params.requestIndex]
             });
         });
 
-        this.ui.get('/response/:responseIndex', function(req, res) {
+        this.uiRouter.get('/response/:responseIndex', function(req, res) {
             res.status(self.responses[req.params.responseIndex] ? 200 : 404).json({
-                request: self.parseRequest(Buffer.from(self.responses[req.params.responseIndex], 'base64').toString())
+                response: self.responses[req.params.responseIndex]
             });
         });
 
-        this.ui.post('/replay', async function(req, res) {
+        this.uiRouter.post('/replay', async function(req, res) {
             const requestIndex = req.body.requestIndex;
             if(self.logLevel > 0) {
                 self.logger.parasite("Replaying request #" + requestIndex);
@@ -431,6 +481,17 @@ class Parasite extends EventEmitter {
 
             return res.status(replay.response ? 200 : 404).json(replay);
         });
+
+        this.ui.use("/api", this.uiRouter);
+
+        this.ui.use(bodyParser.urlencoded({ extended: false }));
+        this.ui.use(bodyParser.json());
+    
+        this.ui.use(express.static(path.join(__dirname, 'dist')));
+        this.ui.get('*', function(req, res) {
+            res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+        });
+
         this.uiServer = this.ui.listen(this.uiPort, this.uiHost, function() {
             if(self.logLevel >= 0) {
                 self.logger.parasite("Web UI started on http://" + self.uiHost + ":" + self.uiPort);
@@ -448,6 +509,7 @@ class Parasite extends EventEmitter {
             self.uiRunning = true;
             self.emit("uiListening");
         });
+
     }
 
     stopProxy (callback = function(){}) {

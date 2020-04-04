@@ -8,18 +8,45 @@
   "license": "MPL-2.0",
   "private": false,
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.12.1",
+    "axios": "^0.19.2",
+    "babel-runtime": "^6.26.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "fast-stream-to-buffer": "^1.0.0",
     "memorystream": "^0.3.1",
+    "nuxt": "^2.0.0",
     "pkg": "^4.4.5",
-    "signale": "^1.4.0"
+    "prismjs": "^1.19.0",
+    "signale": "^1.4.0",
+    "vue-clickaway": "^2.2.2",
+    "vue-prism-component": "^1.1.1",
+    "vue-prismjs": "^1.2.0"
   },
   "devDependencies": {
-    "jest": "^25.2.4"
+    "@babel/runtime-corejs3": "^7.8.7",
+    "@nuxtjs/tailwindcss": "^1.2.0",
+    "core-js": "3",
+    "jest": "^25.2.4",
+    "nodemon": "^2.0.2"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "yarn generate && node executable.js",
+    "dev": "nodemon --ignore ./dist -e js,ico,css,vue,json --exec yarn start",
+    "generate": "nuxt generate"
   },
-  "keywords": ["mitm", "proxy", "parasite", "lynk", "loophole", "loophole-labs", "intercept", "replay", "record", "tcp", "http"]
+  "keywords": [
+    "mitm",
+    "proxy",
+    "parasite",
+    "lynk",
+    "loophole",
+    "loophole-labs",
+    "intercept",
+    "replay",
+    "record",
+    "tcp",
+    "http"
+  ]
 }
