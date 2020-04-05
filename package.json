@@ -1,6 +1,6 @@
 {
   "name": "@loophole-labs/parasite",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Parasite is a native proxy server which allows you to intercept, record, and replay incomming HTTP and raw TCP traffic. It provides an optional web interface and API for managing the incoming requests and replaying them on demand. It is also provided as an optional NPM package.",
   "main": "index.js",
   "repository": "https://github.com/Loophole-Labs/parasite",
@@ -8,28 +8,28 @@
   "license": "MPL-2.0",
   "private": false,
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.12.1",
-    "axios": "^0.19.2",
-    "babel-runtime": "^6.26.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "fast-stream-to-buffer": "^1.0.0",
     "memorystream": "^0.3.1",
-    "nuxt": "^2.0.0",
-    "pkg": "^4.4.5",
-    "prismjs": "^1.19.0",
     "randomstring": "^1.1.5",
-    "signale": "^1.4.0",
-    "vue-clickaway": "^2.2.2",
-    "vue-prism-component": "^1.1.1",
-    "vue-prismjs": "^1.2.0"
+    "signale": "^1.4.0"
   },
   "devDependencies": {
     "@babel/runtime-corejs3": "^7.8.7",
     "@nuxtjs/tailwindcss": "^1.2.0",
     "core-js": "3",
     "jest": "^25.2.4",
-    "nodemon": "^2.0.2"
+    "nodemon": "^2.0.2",
+    "vue-clickaway": "^2.2.2",
+    "vue-prism-component": "^1.1.1",
+    "vue-prismjs": "^1.2.0",
+    "nuxt": "^2.0.0",
+    "pkg": "^4.4.5",
+    "prismjs": "^1.19.0",
+    "@fortawesome/fontawesome-free": "^5.12.1",
+    "axios": "^0.19.2",
+    "babel-runtime": "^6.26.0"
   },
   "scripts": {
     "test": "jest",
