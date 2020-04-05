@@ -60,10 +60,10 @@
                 </div>
                 <p class="text-left px-5 pt-2 font-semibold text-base md:text-lg">
                   Body:
-                  <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto">{{ modalRequest.request.body || 'EMPTY BODY' }}</prism>
+                  <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto mb-4">{{ modalRequest.request.body || 'EMPTY BODY' }}</prism>
                 </p>
                 <p class="text-left px-5 pb-2 font-semibold text-lg md:text-xl">Response:</p>
-                <div class="align-middle inline-block max-w-full overflow-auto">
+                <div v-if="modalResponse" class="align-middle inline-block max-w-full overflow-auto">
                   <table>
                     <tbody>
                       <tr class="bg-white">
@@ -103,9 +103,12 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="text-left px-5 pt-2 font-semibold text-base md:text-lg">
+                <p v-if="modalResponse" class="text-left px-5 pt-2 font-semibold text-base md:text-lg">
                   Body:
                   <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto">{{ modalResponse.body || 'EMPTY BODY' }}</prism>
+                </p>
+                <p v-else class="text-left px-5 font-semibold text-base md:text-lg">
+                  <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto">NO RESPONSE</prism>
                 </p>
               </div>
           </div>
@@ -137,7 +140,7 @@
     </nav>
     <div class="mt-px h-full border-b mb-4 flex overflow-hidden bg-white">
       <main class="flex-1 relative z-0 overflow-y-auto pt-2 pb-6 focus:outline-none md:py-6" tabindex="0">
-        <div class="max-w-5xl mx-auto mt-4 px-4 sm:px-6 md:px-8 h-full">
+        <div class="max-w-3xl mx-auto mt-4 px-4 sm:px-6 md:px-8 h-full">
           <transition name="fade">
             <div class="flex flex-col h-full">
               <div v-if="requests.length < 1 || responses.length < 1" class="flex-grow">
@@ -245,7 +248,7 @@ export default {
       window.scrollTo(0, 0);
       this.requestModal = true;
       this.modalRequest = request;
-      this.modalResponse   = this.responses[request.hash];
+      this.modalResponse   = this.responses[request.hash] || null;
     }
   },
   async beforeMount() {
