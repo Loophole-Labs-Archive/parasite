@@ -23,7 +23,7 @@
             <span class="sr-only">Email</span>
             <i class="far fa-envelope-open"></i>
           </a>
-          <a href="https://loophole-labs-inc.hellonext.co/b/lynk-feedback" class="ml-6 text-2xl text-gray-400 hover:text-gray-500">
+          <a href="https://loophole-labs-inc.hellonext.co/b/parasite-feedback" class="ml-6 text-2xl text-gray-400 hover:text-gray-500">
             <span class="sr-only">Feedback</span>
             <i class="fas fa-comments"></i>
           </a>

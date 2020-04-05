@@ -13,6 +13,7 @@ const MemoryStream = require('memorystream');
 const express = require('express');
 const bodyParser = require("body-parser");
 const EventEmitter = require('events');
+const randomstring = require("randomstring");
 const { Signale } = require('signale');
 const Router = require('express').Router;
 
@@ -69,7 +70,7 @@ class Parasite extends EventEmitter {
         }
 
         this.requests = [];
-        this.responses = [];
+        this.responses = {};
         this.replayResponse = null;
 
         if(this.uiEnabled) {
@@ -190,6 +191,8 @@ class Parasite extends EventEmitter {
 
         let reqStream, resStream, freqStream, fresStream;
 
+        const hash = randomstring.generate(32);
+
         if (this.logLevel > 1 || this.request || this.response) {
             reqStream = new stream.PassThrough();
             resStream = new stream.PassThrough();
@@ -199,7 +202,7 @@ class Parasite extends EventEmitter {
             fresStream = new MemoryStream();
             streamToBuffer(fresStream, function (err, buf) {
                 if (err) throw err
-                self.responses.unshift(self.parseResponse(buf.toString()));
+                self.responses[hash] = self.parseResponse(buf.toString());
             });
             resStream.pipe(fresStream);
         }
@@ -207,7 +210,10 @@ class Parasite extends EventEmitter {
             freqStream = new MemoryStream();
             streamToBuffer(freqStream, function (err, buf) {
                 if (err) throw err
-                self.requests.unshift(self.parseRequest(buf.toString()));
+                self.requests.unshift({
+                    hash: hash,
+                    request: self.parseRequest(buf.toString())
+                });
             });
             reqStream.pipe(freqStream);
         }
@@ -416,22 +422,15 @@ class Parasite extends EventEmitter {
             });
         });
 
-        this.uiRouter.get('/all', function(req, res) {
-            res.status(200).json({
-                requests: self.requests.length >= 10 ? self.requests.slice(0, 10) : self.requests,
-                responses: self.responses.length >= 10 ? self.responses.slice(0, 10) : self.responses
-            });
-        });
-
         this.uiRouter.get('/requests', function(req, res) {
             res.status(200).json({
-                requests: self.requests.length >= 10 ? self.requests.slice(0, 10) : self.requests
+                requests: self.requests
             });
         });
 
         this.uiRouter.get('/responses', function(req, res) {
             res.status(200).json({
-                responses: self.responses.length >= 10 ? self.responses.slice(0, 10) : self.responses
+                responses: self.responses
             });
         });
 
