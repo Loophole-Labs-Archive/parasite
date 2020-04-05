@@ -48,7 +48,7 @@ Everyone interacting in the Parasite project’s codebases, issue trackers, chat
 
 
 ## Project Managed By:
-![https://loopholelabs.io][LOOPHOLELABS]
+![][LOOPHOLELABS]
 
 [HOMEPAGE]: https://github.com/Loophole-Labs/parasite
 [DOCUMENTATION]: https://github.com/Loophole-Labs/parasite/blob/master/Documentation/DOCUMENTATION.md
