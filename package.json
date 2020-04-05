@@ -38,7 +38,8 @@
     "generate": "nuxt generate"
   },
   "files": [
-    "dist"
+    "dist",
+    "assets/images"
   ],
   "keywords": [
     "mitm",
