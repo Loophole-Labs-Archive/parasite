@@ -1,96 +1,117 @@
 <template>
   <div class="relative h-full w-full">
-    <div v-if="requestModal" class="z-10 fixed bottom-0 inset-x-0 px-4 pb-6 inset-0 p-0 flex items-center justify-center z-30">
-      <transition name="fade">
-        <div v-if="requestModal" class="fixed inset-0 transition-opacity">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-      </transition>
-      <transition name="fade">
-        <div v-if="requestModal"  v-on-clickaway="closeRequestModal" class="bg-white rounded-lg px-4 pt-5 pb-4 overflow-hidden shadow-xl transform transition-all max-w-sm w-full sm:p-6">
-          <div>
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-              <i class="fas fa-exclamation-triangle text-red-600"></i>
-            </div>
-            <div class="mt-3 text-center sm:mt-5">
-              <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Are you sure you'd like to delete your account?
-              </h3>
-            </div>
-          </div>
-          <!-- <div v-if="$store.state.ERROR_TYPE === 'delete'" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
-            <strong class="font-bold">Unable to delete your account</strong><br>
-            <span class="block sm:inline">{{ $store.state.ERROR_MESSAGE }}</span>
-            <span @click="clearErrors" class="absolute top-0 bottom-0 right-0 px-4 py-3">
-              <i class="-ml-4 fas fa-times"></i>
-            </span>
-          </div> -->
-          <div class="mt-5 sm:mt-6">
-            <span class="flex w-full rounded-md shadow-sm">
-              <button @click="deleteUser" type="button" :class="{ 'bg-red-300': deleteLoading, 'hover:bg-red-300': deleteLoading, 'pointer-events-none': deleteLoading, 'bg-red-600': !deleteLoading, 'hover:bg-red-500': !deleteLoading }" class="inline-flex justify-center w-full rounded-md border border-transparent px-4 py-2 text-base leading-6 font-medium text-white shadow-sm focus:outline-none focus:border-red-700 focus:shadow-outline-red transition ease-in-out duration-150 sm:text-sm sm:leading-5">
-                <p v-if="!deleteLoading">Delete User</p>
-                <svg v-else width="20" height="20" viewBox="0 0 105 105" xmlns="http://www.w3.org/2000/svg" fill="#fff">
-                  <circle cx="12.5" cy="12.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="0s" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="12.5" cy="52.5" r="12.5" fill-opacity=".5">
-                      <animate attributeName="fill-opacity"
-                      begin="100ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="52.5" cy="12.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="300ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="52.5" cy="52.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="600ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="92.5" cy="12.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="800ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="92.5" cy="52.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="400ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="12.5" cy="92.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="700ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="52.5" cy="92.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="500ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="92.5" cy="92.5" r="12.5">
-                      <animate attributeName="fill-opacity"
-                      begin="200ms" dur="1s"
-                      values="1;.2;1" calcMode="linear"
-                      repeatCount="indefinite" />
-                  </circle>
-                </svg>
+    <div v-if="requestModal" class="absolute left-0 top-0 h-full w-full bg-white-op-50 flex justify-center z-20">
+      <div class="flex items-center justify-center h-screen w-full">
+        <div class="flex items-center min-w-2/3 max-w-2/3" style="height: 600px; max-height: 800px;">
+          <div v-on-clickaway="closeRequestModal" class="relative w-full mx-4 md:mx-0 bg-white box-shadow-xs rounded-lg text-black">
+              <button v-on:click="requestModal = false" class="absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
+                  <i class="fa fa-times" aria-hidden="true"></i>
               </button>
-            </span>
+              <p class="text-left p-5 mr-4 font-semibold text-xl md:text-2xl">{{ modalRequest.request.method }} {{ '/' + modalRequest.request.url.replace(proxyURI, '') }}</p>
+              <div class="overflow-auto m-4" style="max-height: 600px">
+                <p class="text-left px-5 pb-2 font-semibold text-lg md:text-xl">Request:</p>
+                <div class="align-middle inline-block max-w-full overflow-auto">
+                  <table>
+                    <tbody>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          Method:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ modalRequest.request.method }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          URL:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ '/' + modalRequest.request.url.replace(proxyURI, '') }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          HTTP Version:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ modalRequest.request.httpVersion }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left font-semibold text-base md:text-lg">
+                          Headers:
+                        </td>
+                        <td v-if="modalRequest.request.headers" class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                        </td>
+                        <td v-else class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">NO HEADERS</code>
+                        </td>
+                      </tr>
+                      <tr v-for="(item, key) in modalRequest.request.headers" :key="key" class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          {{ key }}:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ item }}</code>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="text-left px-5 pt-2 font-semibold text-base md:text-lg">
+                  Body:
+                  <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto">{{ modalRequest.request.body || 'EMPTY BODY' }}</prism>
+                </p>
+                <p class="text-left px-5 pb-2 font-semibold text-lg md:text-xl">Response:</p>
+                <div class="align-middle inline-block max-w-full overflow-auto">
+                  <table>
+                    <tbody>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          Status:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ modalResponse.status }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          HTTP Version:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ modalResponse.httpVersion }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left font-semibold text-base md:text-lg">
+                          Headers:
+                        </td>
+                        <td v-if="modalResponse.headers" class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                        </td>
+                        <td v-else class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">NO HEADERS</code>
+                        </td>
+                      </tr>
+                      <tr v-for="(item, key) in modalResponse.headers" :key="key" class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          {{ key }}:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ item }}</code>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="text-left px-5 pt-2 font-semibold text-base md:text-lg">
+                  Body:
+                  <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto">{{ modalResponse.body || 'EMPTY BODY' }}</prism>
+                </p>
+              </div>
           </div>
         </div>
-      </transition>
-    </div>
+      </div>
+    </div> 
     <nav class="bg-white shadow">
       <div class="max-w-7xl mx-auto px-2">
         <div class="flex justify-between h-16">
@@ -145,7 +166,7 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr @click="openRequest(index)" v-for="(request, index) in requests" :key="request.hash" :class="{'bg-white': index % 2 == 0, 'bg-gray-100': index & 2 !== 0}" class="hover:bg-gray-200 focus:outline-none focus:bg-gray-300">
+                          <tr @click="openRequest(request)" v-for="(request, index) in requests" :key="request.hash" :class="{'bg-white': index % 2 == 0, 'bg-gray-100': index & 2 !== 0}" class="hover:bg-gray-200 focus:outline-none focus:bg-gray-300">
                             <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
                               {{ request.request.method }}
                             </td>
@@ -192,23 +213,24 @@ export default {
       refresh: 3,
       ingressURI: '',
       proxyURI: '',
+      modalRequest: '',
+      modalResponse: '',
       requestModal: false,
     }
   },
   methods: {
-    scrollToTop() {
-      window.scrollTo(0,0);
+    async fetchInfo() {
+      const infoResponse = await axios.get('/api/info');
+      this.ingressURI = infoResponse.data.ingress;
+      this.proxyURI = infoResponse.data.proxy;
     },
     async fetchData() {
       console.log("Refreshing data");
       const requestResponse = await axios.get('/api/requests');
       const responseResponse = await axios.get('/api/responses');
-      const infoResponse = await axios.get('/api/info');
 
       this.requests = requestResponse.data.requests;
       this.responses = responseResponse.data.responses;
-      this.ingressURI = infoResponse.data.ingress;
-      this.proxyURI = infoResponse.data.proxy;
     },
     async refreshData() {
       var self = this;
@@ -216,16 +238,18 @@ export default {
       await new Promise(resolve => setTimeout(resolve, self.refresh * 1000));
       await this.refreshData();
     },
-
     closeRequestModal() {
       this.requestModal = false;
     },
-
-    openRequest(index) {
+    async openRequest(request) {
+      window.scrollTo(0, 0);
       this.requestModal = true;
+      this.modalRequest = request;
+      this.modalResponse   = this.responses[request.hash];
     }
   },
   async beforeMount() {
+    await this.fetchInfo();
     await this.fetchData();
   },
   async mounted() {
@@ -238,4 +262,10 @@ export default {
 </script>
 
 <style>
+td {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 </style>
