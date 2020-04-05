@@ -1,6 +1,9 @@
-# Parasite
+![][PARASITE]
 
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) [![NPM](https://badgen.net/npm/v/@loophole-labs/parasite)](https://npmjs.com/package/@loophole-labs/parasite) [![NPM](https://badgen.net/npm/dm/@loophole-labs/parasite)](https://npmjs.com/package/@loophole-labs/parasite)
+
+---
+
 **Parasite** is a standalone proxy server which allows you to intercept, record, and replay incoming HTTP and raw TCP traffic. It provides an optional web interface and API for managing the incoming requests and replaying them on demand. It is also provided as an optional NPM package.
 
 ---
@@ -43,5 +46,11 @@ The Parasite project is available as open source under the terms of the [Mozilla
 
 Everyone interacting in the Parasite project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/Loophole-Labs/parasite/blob/master/CODE_OF_CONDUCT.md).
 
+
+## Project Managed By:
+![https://loopholelabs.io][LOOPHOLELABS]
+
 [HOMEPAGE]: https://github.com/Loophole-Labs/parasite
 [DOCUMENTATION]: https://github.com/Loophole-Labs/parasite/blob/master/Documentation/DOCUMENTATION.md
+[PARASITE]: assets/images/parasite.png
+[LOOPHOLELABS]: assets/images/loopholelabs.svg
