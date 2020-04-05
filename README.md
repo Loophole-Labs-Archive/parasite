@@ -34,6 +34,8 @@ Coming Soon
 
 After checking out the repo, run `npm install` or `yarn install` to install dependencies. Then, run `npm run test` or `yarn test` to run the tests.
 
+Use `npm run dev` or `yarn dev` to start the development server with nodemon
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at [https://github.com/Loophole-Labs/parasite][HOMEPAGE]. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
