@@ -2,13 +2,25 @@
   <div class="relative h-full w-full">
     <div v-if="requestModal" class="absolute left-0 top-0 h-full w-full bg-white-op-50 flex justify-center z-20">
       <div class="flex items-center justify-center h-screen w-full">
-        <div class="flex items-center min-w-2/3 max-w-2/3" style="height: 600px; max-height: 800px;">
+        <div class="flex items-center justify-center min-w-2/3 max-w-2/3" style="height: 600px; max-height: 800px;">
           <div v-on-clickaway="closeRequestModal" class="relative w-full mx-4 md:mx-0 bg-white box-shadow-xs rounded-lg text-black">
-              <button v-on:click="requestModal = false" class="absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
+              <button @click="requestModal = false" class="w-4 absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
                   <i class="fa fa-times" aria-hidden="true"></i>
               </button>
-              <p class="text-left p-5 mr-4 font-semibold text-xl md:text-2xl">{{ modalRequest.request.method }} {{ '/' + modalRequest.request.url.replace(proxyURI, '') }}</p>
-              <div class="overflow-auto m-4" style="max-height: 600px">
+              <span class="hidden lg:block m-4 mt-3 mr-12 absolute right-0 top-0 inline-flex rounded-md shadow-sm">
+                  <button @click="openReplayModal" type="button" class="ml-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:shadow-outline-blue active:bg-blue-700 transition ease-in-out duration-150">
+                    Replay Request
+                    <i class="fas fa-history ml-2"></i>
+                  </button>
+                </span>
+              <p class="text-left p-5 mr-16 font-semibold text-xl md:text-2xl">{{ modalRequest.request.method }} {{ '/' + modalRequest.request.url.replace(proxyURI, '') }}</p>
+              <div class="overflow-auto m-4 mt-0" style="max-height: 600px">
+                <span class="block lg:hidden mb-4 inline-flex rounded-md shadow-sm">
+                  <button @click="openReplayModal" type="button" class="ml-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:shadow-outline-blue active:bg-blue-700 transition ease-in-out duration-150">
+                    Replay Request
+                    <i class="fas fa-history ml-2"></i>
+                  </button>
+                </span>
                 <p class="text-left px-5 pb-2 font-semibold text-lg md:text-xl">Request:</p>
                 <div class="align-middle inline-block max-w-full overflow-auto">
                   <table>
@@ -114,6 +126,124 @@
           </div>
         </div>
       </div>
+    </div>
+    <div v-if="replayModal" class="absolute left-0 top-0 h-full w-full bg-white-op-50 flex justify-center z-20">
+      <div class="flex items-center justify-center h-screen w-full">
+        <div class="flex items-center justify-center w-2/3 min-w-2/3 max-w-2/3" style="height: 600px; max-height: 800px;">
+          <div v-on-clickaway="closeTheReplayModal" class="relative w-full mx-4 md:mx-0 bg-white box-shadow-xs rounded-lg text-black">
+              <button @click="replayModal = false" class="w-4 absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
+                  <i class="fa fa-times" aria-hidden="true"></i>
+              </button>
+              <p class="text-left p-5 mr-4 font-semibold text-xl md:text-2xl">Replay Request</p>
+              <div class="overflow-auto m-4 mt-0" style="max-height: 600px">
+                <p class="text-left px-5 pb-2 font-semibold text-lg md:text-xl">Request:</p>
+                <div class="align-middle inline-block max-w-full overflow-auto">
+                  <table>
+                    <tbody>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          Method:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ modalRequest.request.method }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          URL:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ '/' + modalRequest.request.url.replace(proxyURI, '') }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          HTTP Version:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ modalRequest.request.httpVersion }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left font-semibold text-base md:text-lg">
+                          Headers:
+                        </td>
+                        <td v-if="modalRequest.request.headers" class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                        </td>
+                        <td v-else class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">NO HEADERS</code>
+                        </td>
+                      </tr>
+                      <tr v-for="(item, key) in modalRequest.request.headers" :key="key" class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          {{ key }}:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ item }}</code>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p :class="{'mb-12': replayedResponse == ''}" class="text-left px-5 pt-2 font-semibold text-base md:text-lg">
+                  Body:
+                  <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto mb-4">{{ modalRequest.request.body || 'EMPTY BODY' }}</prism>
+                </p>
+                <p v-if="replayedResponse !== ''" class="text-left px-5 pb-2 font-semibold text-lg md:text-xl">Response:</p>
+                <div v-if="replayedResponse !== ''" class="align-middle inline-block max-w-full overflow-auto">
+                  <table>
+                    <tbody>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          Status:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ replayedResponse.status }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          HTTP Version:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ replayedResponse.httpVersion }}</code>
+                        </td>
+                      </tr>
+                      <tr class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left font-semibold text-base md:text-lg">
+                          Headers:
+                        </td>
+                        <td v-if="replayedResponse.headers" class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                        </td>
+                        <td v-else class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">NO HEADERS</code>
+                        </td>
+                      </tr>
+                      <tr v-for="(item, key) in replayedResponse.headers" :key="key" class="bg-white">
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          {{ key }}:
+                        </td>
+                        <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ item }}</code>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p v-if="replayedResponse !== ''" class="mb-12 text-left px-5 pt-2 font-semibold text-base md:text-lg">
+                  Body:
+                  <prism language="shell-session" class="max-w-full max-h-1/2 overflow-auto">{{ replayedResponse.body || 'EMPTY BODY' }}</prism>
+                </p>
+                <span class="m-4 absolute right-0 bottom-0 inline-flex rounded-md shadow-sm">
+                  <button @click="replayRequest" type="button" class="ml-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:shadow-outline-blue active:bg-blue-700 transition ease-in-out duration-150">
+                    Replay
+                    <i class="fas fa-history ml-2"></i>
+                  </button>
+                </span>
+              </div>
+          </div>
+        </div>
+      </div>
     </div> 
     <nav class="bg-white shadow">
       <div class="max-w-7xl mx-auto px-2">
@@ -169,7 +299,7 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr @click="openRequest(request)" v-for="(request, index) in requests" :key="request.hash" :class="{'bg-white': index % 2 == 0, 'bg-gray-100': index & 2 !== 0}" class="hover:bg-gray-200 focus:outline-none focus:bg-gray-300">
+                          <tr @click="openRequest(request, index)" v-for="(request, index) in requests" :key="request.hash" :class="{'bg-white': index % 2 == 0, 'bg-gray-100': index & 2 !== 0}" class="hover:bg-gray-200 focus:outline-none focus:bg-gray-300">
                             <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
                               {{ request.request.method }}
                             </td>
@@ -218,7 +348,11 @@ export default {
       proxyURI: '',
       modalRequest: '',
       modalResponse: '',
+      modalRequestIndex: 0,
       requestModal: false,
+      replayModal: false,
+      replayedResponse: '',
+      replayLoading: false
     }
   },
   methods: {
@@ -244,11 +378,33 @@ export default {
     closeRequestModal() {
       this.requestModal = false;
     },
-    async openRequest(request) {
+    closeTheReplayModal() {
+      console.log("Closing replayModal")
+      this.replayModal = false;
+    },
+    openRequest(request, index) {
       window.scrollTo(0, 0);
       this.requestModal = true;
       this.modalRequest = request;
+      this.modalRequestIndex = index;
       this.modalResponse   = this.responses[request.hash] || null;
+    },
+    openReplayModal() {
+      this.closeRequestModal();
+      this.replayModal = true;
+      this.replayedResponse = '';
+    },
+    replayRequest() {
+      console.log("Replay Request");
+      var self = this;
+      this.replayedResponse = axios.post('/api/replay', {
+        requestIndex: this.modalRequestIndex
+      }).then(function(replayedResponse) {
+        console.log("API REPLAY");
+        self.replayedResponse = replayedResponse.data.response;
+        console.log(self.replayedResponse);
+      });
+
     }
   },
   async beforeMount() {
