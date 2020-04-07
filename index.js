@@ -71,6 +71,7 @@ class Parasite extends EventEmitter {
 
         this.requests = [];
         this.responses = {};
+        this.requestHashes = {};
         this.replayResponse = null;
 
         if(this.uiEnabled) {
@@ -210,10 +211,13 @@ class Parasite extends EventEmitter {
             freqStream = new MemoryStream();
             streamToBuffer(freqStream, function (err, buf) {
                 if (err) throw err
+
+                const parsedRequest = self.parseRequest(buf.toString());
                 self.requests.unshift({
                     hash: hash,
-                    request: self.parseRequest(buf.toString())
+                    request: parsedRequest
                 });
+                self.requestHashes[hash] = parsedRequest;
             });
             reqStream.pipe(freqStream);
         }
@@ -233,13 +237,13 @@ class Parasite extends EventEmitter {
         this.routeRequest(req, res, reqStream, resStream);
     }
     
-    requestReplay (requestIndex) {
+    requestReplay (requestHash) {
         var self = this;
         if(this.requests.length < 1) {
             this.emit("replay", null);
             return;
         }
-        const request = this.parseRequest(Buffer.from(this.requests[requestIndex], 'base64').toString());
+        const request = this.requestHashes[requestHash];
         const url = require('url').parse(request.url);
         const server = url.protocol === 'https:' ? https : http;
         const options = {
@@ -415,6 +419,10 @@ class Parasite extends EventEmitter {
             next();
         });
 
+
+        this.ui.use(bodyParser.urlencoded({ extended: false }));
+        this.ui.use(bodyParser.json());
+
         this.uiRouter.get('/info', function(req, res) {
             res.status(200).json({
                 ingress: 'http://' + self.host + ':' + self.port,
@@ -447,11 +455,10 @@ class Parasite extends EventEmitter {
         });
 
         this.uiRouter.post('/replay', async function(req, res) {
-            const requestIndex = req.body.requestIndex;
+            const requestHash = req.body.requestHash;
             if(self.logLevel > 0) {
-                self.logger.parasite("Replaying request #" + requestIndex);
+                self.logger.parasite("Replaying request hash " + requestHash);
             }
-
             const replay = await new Promise((resolve, reject) => {
                 try {
                     self.on("replay", async function(httpVersion, statusCode, statusMessage, headers, response) {
@@ -472,7 +479,7 @@ class Parasite extends EventEmitter {
                             });
                         }
                     });
-                    self.requestReplay(requestIndex); 
+                    self.requestReplay(requestHash);
                 } catch (err) {
                     return reject(err);
                 }
@@ -482,9 +489,6 @@ class Parasite extends EventEmitter {
         });
 
         this.ui.use("/api", this.uiRouter);
-
-        this.ui.use(bodyParser.urlencoded({ extended: false }));
-        this.ui.use(bodyParser.json());
     
         this.ui.use(express.static(path.join(__dirname, 'dist')));
         this.ui.get('*', function(req, res) {
