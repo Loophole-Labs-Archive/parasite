@@ -1,10 +1,10 @@
 <template>
   <div class="relative h-full w-full">
     <div v-if="requestModal" class="absolute left-0 top-0 h-full w-full bg-white-op-50 flex justify-center z-20">
-      <div class="flex items-center justify-center h-screen w-full">
+      <div class="flex items-center justify-center h-screen w-full z-10">
         <div class="flex items-center justify-center min-w-2/3 max-w-2/3" style="height: 600px; max-height: 800px;">
-          <div v-on-clickaway="closeRequestModal" class="relative w-full mx-4 md:mx-0 bg-white box-shadow-xs rounded-lg text-black">
-              <button @click="requestModal = false" class="w-4 absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
+          <div v-on-clickaway="closeModals" class="relative w-full mx-4 md:mx-0 bg-white box-shadow-xs rounded-lg text-black">
+              <button @click="closeModals" class="w-4 absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
                   <i class="fa fa-times" aria-hidden="true"></i>
               </button>
               <span class="hidden lg:block m-4 mt-3 mr-12 absolute right-0 top-0 inline-flex rounded-md shadow-sm">
@@ -130,8 +130,8 @@
     <div v-if="replayModal" class="absolute left-0 top-0 h-full w-full bg-white-op-50 flex justify-center z-20">
       <div class="flex items-center justify-center h-screen w-full">
         <div class="flex items-center justify-center w-2/3 min-w-2/3 max-w-2/3" style="height: 600px; max-height: 800px;">
-          <div v-on-clickaway="closeTheReplayModal" class="relative w-full mx-4 md:mx-0 bg-white box-shadow-xs rounded-lg text-black">
-              <button @click="replayModal = false" class="w-4 absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
+          <div v-on-clickaway="closeModals" class="relative w-full mx-4 md:mx-0 bg-white box-shadow-xs rounded-lg text-black">
+              <button @click="closeModals" class="w-4 absolute right-0 top-0 text-gray-600 text-lg m-4 hover:text-gray-900">
                   <i class="fa fa-times" aria-hidden="true"></i>
               </button>
               <p class="text-left p-5 mr-4 font-semibold text-xl md:text-2xl">Replay Request</p>
@@ -198,7 +198,7 @@
                           Status:
                         </td>
                         <td class="px-5 py-1 whitespace-no-wrap text-left text-base md:text-lg">
-                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ replayedResponse.status }}</code>
+                          <code class="bg-gray-300 p-1 font-sans font-base text-base md:text-lg">{{ replayedResponse.statusCode }}</code>
                         </td>
                       </tr>
                       <tr class="bg-white">
@@ -280,7 +280,7 @@
                 </p>
               </div>
               <div v-else class="flex-grow">
-                <p class="text-2xl font-semibold text-black mb-4">Viewing Recorded Requests <font class="font-base text-lg">(Refreshing every {{ refresh }} seconds)</p>
+                <p class="text-2xl font-semibold text-black mb-4">Viewing Recorded Requests <font class="font-base text-lg">(Refreshing every {{ refresh }} seconds)</font></p>
                 <div class="flex-none w-auto flex flex-col my-4">
                   <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                     <div class="align-middle inline-block min-w-full border overflow-hidden rounded-lg border-b border-gray-200">
@@ -299,7 +299,7 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr @click="openRequest(request, index)" v-for="(request, index) in requests" :key="request.hash" :class="{'bg-white': index % 2 == 0, 'bg-gray-100': index & 2 !== 0}" class="hover:bg-gray-200 focus:outline-none focus:bg-gray-300">
+                          <tr @click="openRequest(request)" v-for="(request, index) in requests" :key="request.hash" :class="{'bg-white': index % 2 == 0, 'bg-gray-100': index & 2 !== 0}" class="hover:bg-gray-200 focus:outline-none focus:bg-gray-300">
                             <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 font-medium text-gray-900">
                               {{ request.request.method }}
                             </td>
@@ -348,7 +348,6 @@ export default {
       proxyURI: '',
       modalRequest: '',
       modalResponse: '',
-      modalRequestIndex: 0,
       requestModal: false,
       replayModal: false,
       replayedResponse: '',
@@ -375,34 +374,27 @@ export default {
       await new Promise(resolve => setTimeout(resolve, self.refresh * 1000));
       await this.refreshData();
     },
-    closeRequestModal() {
+    closeModals() {
+      this.replayModal = false;
       this.requestModal = false;
     },
-    closeTheReplayModal() {
-      console.log("Closing replayModal")
-      this.replayModal = false;
-    },
-    openRequest(request, index) {
+    openRequest(request) {
       window.scrollTo(0, 0);
       this.requestModal = true;
       this.modalRequest = request;
-      this.modalRequestIndex = index;
       this.modalResponse   = this.responses[request.hash] || null;
     },
     openReplayModal() {
-      this.closeRequestModal();
+      this.closeModals();
       this.replayModal = true;
       this.replayedResponse = '';
     },
     replayRequest() {
-      console.log("Replay Request");
       var self = this;
       this.replayedResponse = axios.post('/api/replay', {
-        requestIndex: this.modalRequestIndex
+        requestHash: self.modalRequest.hash
       }).then(function(replayedResponse) {
-        console.log("API REPLAY");
         self.replayedResponse = replayedResponse.data.response;
-        console.log(self.replayedResponse);
       });
 
     }
@@ -412,6 +404,7 @@ export default {
     await this.fetchData();
   },
   async mounted() {
+    this.popupItem = this.$el;
     var self = this;
     this.$nextTick(async function () {
       await self.refreshData();
