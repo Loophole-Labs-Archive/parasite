@@ -254,7 +254,7 @@
             </nuxt-link>
           </div>
           <div class="flex items-center justify-center p-1 w-auto border-2 border-transparent transition duration-150 ease-in-out">
-            <a href="https://github.com/Loophole-Labs/parasite/blob/master/Documentation/DOCUMENTATION.md">
+            <a href="https://parasite.sh">
               <p class="font-base text-sm sm:text-base m-1 sm:m-2 text-gray-700 rounded-full hover:text-gray-900 focus:outline-none focus:text-gray-900 focus:bg-gray-100">
                 Documentation
               </p>
