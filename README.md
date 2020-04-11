@@ -55,4 +55,4 @@ Everyone interacting in the Parasite project’s codebases, issue trackers, chat
 [HOMEPAGE]: https://github.com/Loophole-Labs/parasite
 [DOCUMENTATION]: https://parasite.sh
 [PARASITE]: assets/images/parasite.png
-[LOOPHOLELABS]: assets/images/loopholelabs.svg
+[LOOPHOLELABS]: assets/images/loopholelabs.png
