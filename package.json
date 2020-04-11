@@ -64,8 +64,7 @@
     ]
   },
   "files": [
-    "dist",
-    "assets/images"
+    "dist"
   ],
   "keywords": [
     "mitm",
