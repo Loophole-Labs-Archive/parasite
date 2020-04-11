@@ -28,7 +28,7 @@ Coming Soon
 
 ## Usage
 
-#### For usage instructions please see our [Documentation][DOCUMENTATION] (Coming Soon)
+#### For usage instructions please see our [Documentation][DOCUMENTATION]
 
 ## Development
 
