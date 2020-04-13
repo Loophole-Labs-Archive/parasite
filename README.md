@@ -22,7 +22,8 @@ yarn add @loophole-labs/parasite
 ```
 
 ## Standalone Installation
-Coming Soon
+
+Please head over to the [Documentation for Native Usage][PREREQNATIVE] installation instructions
 
 ---
 
@@ -54,5 +55,6 @@ Everyone interacting in the Parasite project’s codebases, issue trackers, chat
 
 [HOMEPAGE]: https://github.com/Loophole-Labs/parasite
 [DOCUMENTATION]: https://parasite.sh
+[PREREQNATIVE]: https://parasite.sh/?p=1
 [PARASITE]: assets/images/parasite.png
 [LOOPHOLELABS]: assets/images/loopholelabs.png
