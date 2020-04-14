@@ -15,8 +15,8 @@ test('Starts Parasite with default options', (done) => {
         parasite.stopProxy();
     });
 
-    parasite.on("uiListening", function() {
-        expect(parasite.uiRunning).toBe(true);
+    parasite.on("apiListening", function() {
+        expect(parasite.apiRunning).toBe(true);
         parasite.stopUI();
     });
 
@@ -27,22 +27,22 @@ test('Starts Parasite with default options', (done) => {
     expect(parasite.response).toBe(false);
     expect(parasite.allowInsecure).toBe(false);
     expect(parasite.logLevel).toBe(1);
-    expect(parasite.uiPort).toBe(5050);
-    expect(parasite.uiHost).toBe('localhost');
+    expect(parasite.apiPort).toBe(5050);
+    expect(parasite.apiHost).toBe('localhost');
 
     expect(parasite.proxyURI.href).toBe('http://localhost:3000/');
 
     parasite.proxy.on("close", function() {
         expect(parasite.proxyRunning).toBe(false);
-        parasite.uiServer.on("close", function() {
-            expect(parasite.uiRunning).toBe(false);
+        parasite.apiServer.on("close", function() {
+            expect(parasite.apiRunning).toBe(false);
             return done();
         });
     });
 });
 
 
-test('Starts Parasite with without UI', (done) => {
+test('Starts Parasite without UI', (done) => {
 
     const parasite = new Parasite({
         uiEnabled: false,
@@ -54,7 +54,13 @@ test('Starts Parasite with without UI', (done) => {
         parasite.stopProxy();
     });
 
-    expect(parasite.uiRunning).toBe(false);
+    parasite.on("apiListening", function() {
+        expect(parasite.apiRunning).toBe(true);
+        parasite.stopUI();
+    });
+
+    expect(parasite.apiEnabled).toBe(true);
+    expect(parasite.uiEnabled).toBe(false);
 
     expect(parasite.test).toBe(true);
     expect(parasite.port).toBe(8080);
@@ -63,8 +69,43 @@ test('Starts Parasite with without UI', (done) => {
     expect(parasite.response).toBe(false);
     expect(parasite.allowInsecure).toBe(false);
     expect(parasite.logLevel).toBe(1);
-    expect(parasite.uiPort).toBe(5050);
-    expect(parasite.uiHost).toBe('localhost');
+    expect(parasite.apiPort).toBe(5050);
+    expect(parasite.apiHost).toBe('localhost');
+
+    expect(parasite.proxyURI.href).toBe('http://localhost:3000/');
+
+    parasite.proxy.on("close", function() {
+        expect(parasite.proxyRunning).toBe(false);
+        parasite.apiServer.on("close", function() {
+            expect(parasite.apiRunning).toBe(false);
+            return done();
+        });
+    });
+});
+
+test('Starts Parasite with without API', (done) => {
+
+    const parasite = new Parasite({
+        apiEnabled: false,
+        test: true
+    });
+
+    parasite.on("proxyListening", function() {
+        expect(parasite.proxyRunning).toBe(true);
+        parasite.stopProxy();
+    });
+
+    expect(parasite.apiRunning).toBe(false);
+
+    expect(parasite.test).toBe(true);
+    expect(parasite.port).toBe(8080);
+    expect(parasite.host).toBe('localhost');
+    expect(parasite.request).toBe(true);
+    expect(parasite.response).toBe(false);
+    expect(parasite.allowInsecure).toBe(false);
+    expect(parasite.logLevel).toBe(1);
+    expect(parasite.apiPort).toBe(5050);
+    expect(parasite.apiHost).toBe('localhost');
 
     expect(parasite.proxyURI.href).toBe('http://localhost:3000/');
 
@@ -78,12 +119,12 @@ test('Starts Parasite with without autostart', (done) => {
 
     const parasite = new Parasite({
         autoStart: false,
-        uiEnabled: false,
+        apiEnabled: false,
         test: true
     });
 
     expect(parasite.proxyRunning).toBe(false);
-    expect(parasite.uiRunning).toBe(false);
+    expect(parasite.apiRunning).toBe(false);
 
     expect(parasite.test).toBe(true);
     expect(parasite.port).toBe(8080);
@@ -92,8 +133,8 @@ test('Starts Parasite with without autostart', (done) => {
     expect(parasite.response).toBe(false);
     expect(parasite.allowInsecure).toBe(false);
     expect(parasite.logLevel).toBe(1);
-    expect(parasite.uiPort).toBe(5050);
-    expect(parasite.uiHost).toBe('localhost');
+    expect(parasite.apiPort).toBe(5050);
+    expect(parasite.apiHost).toBe('localhost');
 
     expect(parasite.proxyURI.href).toBe('http://localhost:3000/');
 
@@ -119,8 +160,8 @@ test('Starts Parasite with without logging', (done) => {
         parasite.stopProxy();
     });
 
-    parasite.on("uiListening", function() {
-        expect(parasite.uiRunning).toBe(true);
+    parasite.on("apiListening", function() {
+        expect(parasite.apiRunning).toBe(true);
         parasite.stopUI();
     });
 
@@ -131,16 +172,16 @@ test('Starts Parasite with without logging', (done) => {
     expect(parasite.response).toBe(false);
     expect(parasite.allowInsecure).toBe(false);
     expect(parasite.logLevel).toBe(-1);
-    expect(parasite.uiPort).toBe(5050);
-    expect(parasite.uiHost).toBe('localhost');
+    expect(parasite.apiPort).toBe(5050);
+    expect(parasite.apiHost).toBe('localhost');
     expect(parasite.logger).toBe(jestLogger);
 
     expect(parasite.proxyURI.href).toBe('http://localhost:3000/');
 
     parasite.proxy.on("close", function() {
         expect(parasite.proxyRunning).toBe(false);
-        parasite.uiServer.on("close", function() {
-            expect(parasite.uiRunning).toBe(false);
+        parasite.apiServer.on("close", function() {
+            expect(parasite.apiRunning).toBe(false);
             expect(jestLogger.parasite).toHaveBeenCalledTimes(0);
             expect(jestLogger.error).toHaveBeenCalledTimes(0);
             expect(jestLogger.log).toHaveBeenCalledTimes(0);

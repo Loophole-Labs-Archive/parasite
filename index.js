@@ -43,9 +43,10 @@ class Parasite extends EventEmitter {
         this.response = this.options.response || false;
         this.allowInsecure = this.options.allowInsecure || false;
         this.logLevel = this.options.logLevel || 1;
-        this.uiEnabled = this.options.uiEnabled == undefined ? true : this.options.ui;
-        this.uiPort = this.options.uiPort || 5050;
-        this.uiHost = this.options.uiHost || 'localhost'
+        this.uiEnabled = this.options.uiEnabled == undefined ? true : this.options.uiEnabled;
+        this.apiEnabled = this.options.apiEnabled == undefined ? true : this.options.apiEnabled;
+        this.apiPort = this.options.apiPort || 5050;
+        this.apiHost = this.options.apiHost || 'localhost'
         this.autoStart = this.options.autoStart == undefined ? true : this.options.autoStart;
         this.tcp = this.options.tcp || false;
 
@@ -59,7 +60,7 @@ class Parasite extends EventEmitter {
         }
 
         this.proxyRunning = false;
-        this.uiRunning = false;
+        this.apiRunning = false;
 
         if(!this.tcp) {
             this.server = this.proxyURI.protocol === 'https:' ? https : http;
@@ -74,7 +75,7 @@ class Parasite extends EventEmitter {
         this.requestHashes = {};
         this.replayResponse = null;
 
-        if(this.uiEnabled) {
+        if(this.apiEnabled) {
             this.startUI();
         }
 
@@ -403,9 +404,11 @@ class Parasite extends EventEmitter {
     }
 
     startUI () {
-        if(this.uiRunning) {
+        if(this.apiRunning) {
             return;
         }
+
+        this.apiEnabled = true;
 
         var self = this;
         this.ui = express();
@@ -418,7 +421,6 @@ class Parasite extends EventEmitter {
             res.req = req;
             next();
         });
-
 
         this.ui.use(bodyParser.urlencoded({ extended: false }));
         this.ui.use(bodyParser.json());
@@ -490,18 +492,24 @@ class Parasite extends EventEmitter {
 
         this.ui.use("/api", this.uiRouter);
     
-        this.ui.use(express.static(path.join(__dirname, 'dist')));
-        this.ui.get('*', function(req, res) {
-            res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-        });
-
-        this.uiServer = this.ui.listen(this.uiPort, this.uiHost, function() {
+        if(this.uiEnabled) {
+            this.ui.use(express.static(path.join(__dirname, 'dist')));
+            this.ui.get('*', function(req, res) {
+                res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+            });
+        }
+        
+        this.apiServer = this.ui.listen(this.apiPort, this.apiHost, function() {
             if(self.logLevel >= 0) {
-                self.logger.parasite("Web UI started on http://" + self.uiHost + ":" + self.uiPort);
+                if(self.uiEnabled) {
+                    self.logger.parasite("Web UI started on http://" + self.apiHost + ":" + self.apiPort);
+                } else {
+                    self.logger.parasite("API started on http://" + self.apiHost + ":" + self.apiPort);
+                }
             }
 
             if(this.test) {
-                this.uiServer.on('connection', function(socket) {
+                this.apiServer.on('connection', function(socket) {
                     self.uiSockets.add(socket);
                     socket.on("close", function() {
                         self.uiSockets.delete(socket);
@@ -509,8 +517,8 @@ class Parasite extends EventEmitter {
                 });
             }
 
-            self.uiRunning = true;
-            self.emit("uiListening");
+            self.apiRunning = true;
+            self.emit("apiListening");
         });
 
     }
@@ -530,14 +538,14 @@ class Parasite extends EventEmitter {
     }
 
     stopUI (callback = function(){}) {
-        if(this.uiRunning) {
+        if(this.apiRunning) {
             if(this.test) {
                 for (const socket of this.uiSockets.values()) {
                     socket.destroy();
                 }
             }
-            this.uiServer.close();
-            this.uiRunning = false;
+            this.apiServer.close();
+            this.apiRunning = false;
         }
         
         return callback();
