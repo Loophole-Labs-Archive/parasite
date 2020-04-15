@@ -64,7 +64,7 @@ const signale = new Signale(options);
 
 const argv = require('minimist')(process.argv.slice(2));
 
-const version = '0.1.7';
+const version = '0.1.8';
 
 if(argv['_'].includes('version')) {
     signale.log(chalk.red("Parsite Version:", version));

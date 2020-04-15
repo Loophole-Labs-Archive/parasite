@@ -444,15 +444,15 @@ class Parasite extends EventEmitter {
             });
         });
 
-        this.uiRouter.get('/request/:requestIndex', function(req, res) {
-            res.status(self.requests[req.params.requestIndex] ? 200 : 404).json({
-                request: self.requests[req.params.requestIndex]
+        this.uiRouter.get('/request/:requestHash', function(req, res) {
+            res.status(self.requests[req.params.requestHash] ? 200 : 404).json({
+                request: self.requestHashes[req.params.requestHash]
             });
         });
 
-        this.uiRouter.get('/response/:responseIndex', function(req, res) {
-            res.status(self.responses[req.params.responseIndex] ? 200 : 404).json({
-                response: self.responses[req.params.responseIndex]
+        this.uiRouter.get('/response/:requestHash', function(req, res) {
+            res.status(self.responses[req.params.requestHash] ? 200 : 404).json({
+                response: self.responses[req.params.requestHash]
             });
         });
 
