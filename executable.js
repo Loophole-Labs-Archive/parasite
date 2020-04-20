@@ -1,10 +1,13 @@
+#!/usr/bin/env node
+
 const Parasite = require('./index');
 const ora = require('ora');
 const chalk = require('chalk');
 const clear = require('clear');
 const figlet = require('figlet');
 const commandLineUsage = require('command-line-usage');
-var request = require('request-promise');
+const os = require('os');
+const request = require('request-promise');
 
 const updateOptions = {
     uri: 'https://dl.loopholelabs.io/releases/parasite/parasiteClientVersion',
@@ -48,7 +51,7 @@ const sections = [
 const usage = commandLineUsage(sections);
 
 const { Signale } = require('signale');
- 
+
 const options = {
   types: {
     globe: {
@@ -126,10 +129,10 @@ function start(updateAvailable) {
     }
 
     let spinner = ora('Starting Parasite\n').start();
-    
+
     const proxyPort = argv['_'][0] || 8080;
     const forwardPort = argv['_'][1] || 3000;
-    
+
     const proxyHost = argv['listen'] || argv['l'] || 'localhost';
     const forwardHost = argv['forward'] || argv['f'] || 'localhost'
     const ssl = argv['ssl'] || false;
