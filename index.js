@@ -95,7 +95,7 @@ class Parasite extends EventEmitter {
             path += '/';
         }
 
-        if (!/^https?:\/\//i.test(path)) {
+        if (!/^https?:\/\//i.test(path) && path[0] != '/') {
             path = '/' + path;
         }
 
