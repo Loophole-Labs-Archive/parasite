@@ -1,4 +1,5 @@
 const Parasite = require('./index');
+const os = require('os');
 const ora = require('ora');
 const chalk = require('chalk');
 const clear = require('clear');
